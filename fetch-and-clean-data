@@ -1,4 +1,3 @@
-```python
 import requests
 import pandas as pd
 
@@ -26,13 +25,15 @@ while True:
 df = pd.DataFrame(all_data)
 print(f"\nTotal rows fetched: {len(df)}")
 
-# ── STEP 2: CLEAN DATE COLUMN ─────────────────────────────────────────
+# ── STEP 2: CLEAN ALL STRING COLUMNS FIRST ───────────────────────────
+
+df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+
+# ── STEP 3: CLEAN DATE COLUMN ─────────────────────────────────────────
 
 df['lead_date'] = pd.to_datetime(df['lead_date'], format='mixed', errors='coerce').dt.date
 
-# ── STEP 3: CLEAN ALL COLUMNS ─────────────────────────────────────────
-
-df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+# ── STEP 4: CLEAN ALL OTHER COLUMNS ──────────────────────────────────
 
 neighbourhood_mapping = {
     'West End': 'West End', 'Westend': 'West End', 'Westend ': 'West End',
@@ -122,7 +123,7 @@ df['customer_age_bracket'] = df['customer_age_bracket'].map(age_mapping)
 df['lead_weekday']         = df['lead_weekday'].map(weekday_mapping)
 df['expected_profit_band'] = df['expected_profit_band'].map(profit_mapping)
 
-# ── STEP 4: SPLIT DATA ────────────────────────────────────────────────
+# ── STEP 5: SPLIT DATA ────────────────────────────────────────────────
 
 df_labelled   = df[df['expected_profit_band'].notna()]
 df_unlabelled = df[df['expected_profit_band'].isna()]
@@ -137,7 +138,7 @@ print(f"  - Incomplete (has missing values):   {len(df_labelled_incomplete)}")
 print(f"Unlabelled rows (missing profit band): {len(df_unlabelled)}")
 print(f"  - Complete (no missing values):      {len(df_unlabelled_complete)}")
 
-# ── STEP 5: SAVE TO EXCEL ─────────────────────────────────────────────
+# ── STEP 6: SAVE TO EXCEL ─────────────────────────────────────────────
 
 with pd.ExcelWriter("leads_data_organised.xlsx", engine='openpyxl') as writer:
     df.to_excel(writer,                     sheet_name='All Data',                     index=False)
